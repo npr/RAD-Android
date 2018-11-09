@@ -1,0 +1,1 @@
+include ':Rad_android', ':library-core-debug'

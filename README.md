@@ -1,4 +1,4 @@
-# dm-rad-android
+# Rad-Android
 ## Rad 
 ##### Podcast Analytics
 RAD is a framework for reporting the listenership of podcasts in Android apps using ExoPlayer

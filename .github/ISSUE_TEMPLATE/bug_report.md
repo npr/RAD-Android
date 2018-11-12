@@ -4,7 +4,7 @@ about: Create a report to help us improve
 
 ---
 
-**Describe the bug**
+**Describe the Bug**
 A clear and concise description of what the bug is.
 
 **To Reproduce**
@@ -14,10 +14,10 @@ Steps to reproduce the behavior:
 3. Play media file that has following RAD metadata '....'
 4. Other steps
 
-**Actual behavior**
+**Actual Behavior**
 A clear and concise description of what actual behavior is.
 
-**Expected behavior**
+**Expected Behavior**
 A clear and concise description of what you expected to happen.
 
 **Smartphone (please complete the following information):**
@@ -25,5 +25,5 @@ A clear and concise description of what you expected to happen.
  - OS: [e.g. iOS8.1]
  - Version [e.g. Version 1.0 Build 1]
 
-**Additional context**
+**Additional Context**
 Add any other context about the problem here.

@@ -1,6 +1,6 @@
 ---
 name: Feature request
-about: Suggest an idea for this project
+about: Please suggest ideas, questions or alternate implementation suggestions here. Remote Audio Data is meant to be a collaborative effort and we hope to foster that dialogue.
 
 ---
 

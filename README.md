@@ -1,20 +1,20 @@
-# Rad-Android
-## Rad 
+# RAD-Android
+## RAD 
 ##### Podcast Analytics
-RAD is a framework for reporting the listenership of podcasts in Android apps using ExoPlayer
+Remote Audio Data is a framework for reporting the listenership of podcasts in Android apps using ExoPlayer.
 
 ### Getting Started
 
 #### Project Setup
 _`TODO` detail gradle setup after publishing_
 
-#### Initialize the framework
+#### Initialize the Framework
 
 Call `Rad.with(Application application)` passing a reference to the application context.
 
 _e.g.:_ call `Rad.with(this)` in the `onCreate()` method of the Android application subclass.
 
-####Configure the framework
+#### Configure the Framework
 
 `Rad.getInstance().get/setBatchSize(int batchSize)` - configures the maximum number of events to be reported in a request
 
@@ -35,7 +35,7 @@ _e.g.:_ `TrackSelection.Factory trackSelectionFactory = new AdaptiveTrackSelecti
             `ExoPlayer exoPlayer = ExoPlayerFactory.newSimpleInstance(getActivity(), trackSelector);`
             `Rad.start(exoPlayer, trackSelector);`
 
-#### Debugging the framework
+#### Debugging the Framework
 
  For debug builds, call `Rad.printDataBase()` to print the contents of the SQLite database
  or use the debug listener for intercepting events within the framework:

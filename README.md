@@ -34,6 +34,7 @@ _e.g.:_ `TrackSelection.Factory trackSelectionFactory = new AdaptiveTrackSelecti
             `DefaultTrackSelector trackSelector = new DefaultTrackSelector(trackSelectionFactory);`
             `ExoPlayer exoPlayer = ExoPlayerFactory.newSimpleInstance(getActivity(), trackSelector);`
             `Rad.start(exoPlayer, trackSelector);`
+            `exoPlayer.setPlayWhenReady(true)`
 
 #### Debugging the Framework
 

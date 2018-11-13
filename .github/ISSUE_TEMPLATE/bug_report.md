@@ -21,9 +21,9 @@ A clear and concise description of what actual behavior is.
 A clear and concise description of what you expected to happen.
 
 **Smartphone (please complete the following information):**
- - Device: [e.g. iPhone6]
- - OS: [e.g. iOS8.1]
- - Version [e.g. Version 1.0 Build 1]
+ - Device: [e.g. Pixel 3 XL]
+ - OS: [e.g. Android 9]
+ - Version [e.g. Version 1.0.1]
 
 **Additional Context**
 Add any other context about the problem here.

@@ -1,1 +1,1 @@
-include ':Rad_android', ':library-core-debug', ':demo'
+include ':rad',  ':demo'

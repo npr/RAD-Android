@@ -41,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
                 TrackSelection.Factory trackSelectionFactory = new AdaptiveTrackSelection.Factory(new DefaultBandwidthMeter());
                 DefaultTrackSelector trackSelector = new DefaultTrackSelector(trackSelectionFactory);
                 ExoPlayer exoPlayer = ExoPlayerFactory.newSimpleInstance(MainActivity.this, trackSelector, new DefaultLoadControl());
-                DataSpec dataSpec = new DataSpec(RawResourceDataSource.buildRawResourceUri(R.raw.audio));
+                DataSpec dataSpec = new DataSpec(RawResourceDataSource.buildRawResourceUri(R.raw.rad_sample_file_for_demo));
                 final RawResourceDataSource rawResourceDataSource = new RawResourceDataSource(MainActivity.this);
                 try {
                     rawResourceDataSource.open(dataSpec);

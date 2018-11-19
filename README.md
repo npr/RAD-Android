@@ -7,7 +7,7 @@ Remote Audio Data is a framework for reporting the listenership of podcasts in A
 
 #### Project Setup
 
-Add _implementation org.npr:rad:1.0.4_ to your module's gradle's dependencies.
+Add _implementation org.npr:rad:1.0.5_ to your module's gradle's dependencies.
 
 #### Initialize the Framework
 

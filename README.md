@@ -1,5 +1,5 @@
 # RAD-Android
-## RAD 
+## RAD
 ##### Podcast Analytics
 Remote Audio Data is a framework for reporting the listenership of podcasts in Android apps using ExoPlayer version 2.9.1.
 
@@ -7,7 +7,7 @@ Remote Audio Data is a framework for reporting the listenership of podcasts in A
 
 #### Project Setup
 
-Add _implementation com.npr:rad:1.0.1_ to your module's gradle's dependencies.
+Add _implementation org.npr:rad:1.0.4_ to your module's gradle's dependencies.
 
 #### Initialize the Framework
 
@@ -19,7 +19,7 @@ _e.g.:_ call `Rad.with(this)` in the `onCreate()` method of the Android applicat
 
 `Rad.getInstance().get/setBatchSize(int batchSize)` - configures the maximum number of events to be reported in a request
 
-`Rad.getInstance().get/setUserAgent(String userAgent)` - configures the User-Agent header for http requests 
+`Rad.getInstance().get/setUserAgent(String userAgent)` - configures the User-Agent header for http requests
 
 `Rad.getInstance().get/setExpirationTimeInterval(long millis)` - configures the maximum age of events to be reported
 
@@ -31,7 +31,9 @@ Alternatively, for initializing and configuring the framework call `Rad.with(App
 
 Call `Rad.start(ExoPlayer player, DefaultTrackSelector selector)` passing an ExoPlayer object and a DefaultTrackSelector object. Method can be safely called multiple times with different player objects. The framework will monitor the last player object passed.
 
-_e.g.:_ `TrackSelection.Factory trackSelectionFactory = new AdaptiveTrackSelection.Factory(new DefaultBandwidthMeter());`
+_e.g.:_
+
+    `TrackSelection.Factory trackSelectionFactory = new AdaptiveTrackSelection.Factory(new DefaultBandwidthMeter());`
             `DefaultTrackSelector trackSelector = new DefaultTrackSelector(trackSelectionFactory);`
             `ExoPlayer exoPlayer = ExoPlayerFactory.newSimpleInstance(getActivity(), trackSelector);`
             `Rad.start(exoPlayer, trackSelector);`
@@ -41,7 +43,7 @@ _e.g.:_ `TrackSelection.Factory trackSelectionFactory = new AdaptiveTrackSelecti
 
  For debug builds, call `Rad.printDataBase()` to print the contents of the SQLite database
  or use the debug listener for intercepting events within the framework:
-      
+
      `Rad.getInstance().setDebugListener(new Rad.DebugListener() {`
                  `public void onMetadataChanged(String remoteAudioData) {}`
                  `public void onEventTriggered(String s) {}`

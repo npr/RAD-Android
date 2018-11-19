@@ -21,7 +21,7 @@ apply plugin: 'jacoco'
 ext {
     bintrayRepo = 'RemoteAudioData'
     bintrayName = 'rad'
-    radVersion = '1.0.3'
+    radVersion = '1.0.4'
     libraryName = 'RemoteAudioData'
     artifact = 'rad'
     libraryDescription = 'PodcastAnalytics'
@@ -87,6 +87,7 @@ task jacocoTestReport(type: JacocoReport, dependsOn: ['testDebugUnitTest', 'crea
     ])
 }
 
+
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation group: 'org.jacoco', name: 'org.jacoco.agent', version: '0.7.9'
@@ -99,7 +100,6 @@ dependencies {
     implementation 'com.google.android.exoplayer:exoplayer-core:2.9.1'
     implementation 'com.squareup.retrofit2:retrofit:2.4.0'
 }
-
 
 install {
     repositories.mavenInstaller {
@@ -134,6 +134,15 @@ install {
     }
 }
 
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from android.sourceSets.main.java.srcDirs
+}
+
+artifacts {
+    archives sourcesJar
+}
+
 bintray {
     Properties properties = new Properties()
     properties.load(project.rootProject.file('local.properties').newDataInputStream())
@@ -158,4 +167,5 @@ bintray {
         version radVersion
     }
 }
+
 

@@ -1,7 +1,12 @@
 # RAD-Android
+
 ## RAD
+
 ##### Podcast Analytics
+
 Remote Audio Data is a framework for reporting the listenership of podcasts in Android apps using ExoPlayer version 2.9.1.
+
+If you want to view the RAD specification in more detail, please visit [this page](https://docs.google.com/document/d/14W1M3RaNfv-3mzY0paTs1A_uZ5fITSvWbpMbIikdHxk).
 
 ### Getting Started
 

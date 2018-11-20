@@ -89,6 +89,7 @@ public class DaoMaster {
     /**
      * Deeletes all expired reporting data: events, metadata, sessions and trackingurls
      * with the exception of the data passed as argument, that the app is presumably still using.
+     *
      * @param reportingData - the data that is not supposed to be deleted because the framework is still using it.
      */
     public synchronized void cleanUpDb(ReportingData reportingData) {

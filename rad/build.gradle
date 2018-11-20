@@ -21,7 +21,7 @@ apply plugin: 'jacoco'
 ext {
     bintrayRepo = 'RemoteAudioData'
     bintrayName = 'rad'
-    radVersion = '1.0.5'
+    radVersion = '1.0.7'
     libraryName = 'RemoteAudioData'
     artifact = 'rad'
     libraryDescription = 'PodcastAnalytics'

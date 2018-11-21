@@ -56,6 +56,7 @@ public class Rad {
     private static long submissionTimeInterval = DEFAULT_SUBMISSION_TIME_INTERVAL;
     private static long expirationTimeInterval = DEFAULT_EXPIRATION_TIME_INTERVAL;
     private static String userAgent = DEFAULT_USER_AGENT;
+    private static boolean debugEnabled = false;
 
     private DebugListener debugListener;
 
@@ -90,6 +91,7 @@ public class Rad {
      */
     public static void with(Context applicationContext, Configuration configuration) {
         validateConfig(configuration);
+        debugEnabled = configuration.debugEnabled;
         batchSize = configuration.batchSize;
         sessionExpirationTimeInterval = configuration.sessionExpirationTimeInterval;
         submissionTimeInterval = configuration.submissionTimeInterval;
@@ -166,7 +168,7 @@ public class Rad {
             instance.reportingData = reportingData;
             instance.metadataAvailable = true;
             instance.addPlayBackEvent(new PlayBackEvent(PlayBackEvent.State.STARTED, 0));
-            if (debugListener != null) {
+            if (debugListener != null && debugEnabled) {
                 debugListener.onMetadataChanged(reportingData != null ? reportingData.toString() : "");
             }
         }
@@ -180,19 +182,17 @@ public class Rad {
      * Sets a callback for receiving the triggered events and sent requests when running debug builds
      */
     public void setDebugListener(DebugListener callback) {
-        if (BuildConfig.DEBUG) {
-            debugListener = callback;
-        }
+        debugListener = callback;
     }
 
     void onEventTriggered(String s) {
-        if (null != debugListener) {
+        if (null != debugListener && debugEnabled) {
             debugListener.onEventTriggered(s);
         }
     }
 
     void onRequestSent(String s) {
-        if (null != debugListener) {
+        if (null != debugListener && debugEnabled) {
             debugListener.onRequestSent(s);
         }
     }
@@ -298,10 +298,18 @@ public class Rad {
      * For debug builds returns all records in the SQL database, otherwise return null;
      */
     public static String getDatabase() {
-        if (BuildConfig.DEBUG) {
+        if (debugEnabled) {
             return DaoMaster.getInstance().printData();
         }
         return null;
+    }
+
+    public static boolean isDebugEnabled() {
+        return debugEnabled;
+    }
+
+    public static void setDebugEnabled(boolean debugEnabled) {
+        Rad.debugEnabled = debugEnabled;
     }
 
     /**
@@ -313,5 +321,6 @@ public class Rad {
         public long sessionExpirationTimeInterval;
         public long expirationTimeInterval;
         public String userAgent;
+        public boolean debugEnabled;
     }
 }

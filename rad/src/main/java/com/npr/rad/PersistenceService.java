@@ -72,11 +72,11 @@ public class PersistenceService extends JobIntentService {
         }
     }
 
-    private void storeEvents(long sessionId, List<TrackingUrl> trackingUrls, List<Event> events) {
+    private synchronized void storeEvents(long sessionId, List<TrackingUrl> trackingUrls, List<Event> events) {
         DaoMaster.getInstance().storeEvents(sessionId, trackingUrls, events);
     }
 
-    private void storeMetadata(String s) {
+    private synchronized void storeMetadata(String s) {
         ReportingData radData = parseJson(s);
         if (null != radData) {
             radData = DaoMaster.getInstance().storeReportingData(radData);

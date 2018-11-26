@@ -57,6 +57,18 @@ public class TrackingUrlTable {
         return url;
     }
 
+    public TrackingUrl create(String trackingUrl, long id) {
+        TrackingUrl url = getTrackingUrl(trackingUrl);
+        if (null == url) {
+            url = new TrackingUrl(trackingUrl);
+            ContentValues values = new ContentValues();
+            values.put(TRACKING_URL, trackingUrl);
+            values.put(TRACKING_URL_ID, id);
+            url.setTrackingUrlId(db.insert(TABLE_NAME, null, values));
+        }
+        return url;
+    }
+
     List<TrackingUrl> read() {
         ArrayList<TrackingUrl> results = new ArrayList<>();
         TrackingUrl trackingUrl;

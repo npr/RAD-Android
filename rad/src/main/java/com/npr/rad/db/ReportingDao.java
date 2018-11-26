@@ -60,7 +60,7 @@ class ReportingDao extends BaseDao {
         return reportingTable.read(trackingUrlId, sessionId);
     }
 
-    public void delete(long trackingUrlId, long sessionId, long eventId) {
-        reportingTable.delete(trackingUrlId, sessionId, eventId);
+    public void delete(long trackingUrlId, long sessionId, long eventId, long eventTimestamp) {
+        reportingTable.delete(trackingUrlId, sessionId, eventId, eventTimestamp);
     }
 }

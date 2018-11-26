@@ -17,6 +17,7 @@ package com.npr.rad.db;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 
 import com.npr.rad.model.Event;
 import com.npr.rad.model.Metadata;
@@ -30,12 +31,13 @@ import java.util.List;
 
 public class DaoMaster {
 
-
+    private SQLiteDatabase database;
     private EventDao eventDao;
     private TrackingUrlDao trackingUrlDao;
     private SessionDao sessionDao;
     private MetadataDao metadataDao;
     private ReportingDao reportingDao;
+    private MetadataUrlRefDao metadataUrlRefDao;
     private static DaoMaster instance;
 
     private DaoMaster() {
@@ -50,28 +52,39 @@ public class DaoMaster {
 
     public synchronized void setContext(Context context) {
         DbHelper dbHelper = new DbHelper(context);
-        SQLiteDatabase database = dbHelper.getWritableDatabase();
+        database = dbHelper.getWritableDatabase();
         trackingUrlDao = new TrackingUrlDao(database);
         metadataDao = new MetadataDao(database);
         sessionDao = new SessionDao(database);
         eventDao = new EventDao(database);
         reportingDao = new ReportingDao(database);
+        metadataUrlRefDao = new MetadataUrlRefDao(database);
     }
 
     public synchronized void storeEvents(long sessionId, List<TrackingUrl> trackingUrls, List<Event> events) {
+        database.beginTransaction();
         reportingDao.create(sessionId, trackingUrls, events);
+        database.setTransactionSuccessful();
+        database.endTransaction();
     }
 
     public synchronized ReportingData storeReportingData(ReportingData reportingData) {
+        database.beginTransaction();
         List<TrackingUrl> storedTrackingUrls = new ArrayList<>();
+        reportingData.setMetadata(metadataDao.create(reportingData.getMetadata()));
         for (TrackingUrl trackingUrl : reportingData.getTrackingUrls()) {
             storedTrackingUrls.add(trackingUrlDao.create(trackingUrl));
         }
         reportingData.setTrackingUrls(storedTrackingUrls);
-        reportingData.setMetadata(metadataDao.create(reportingData.getMetadata()));
+        for (TrackingUrl url : reportingData.getTrackingUrls()) {
+            metadataUrlRefDao.create(url.getTrackingUrlId(), reportingData.getMetadata().getMetadataId());
+        }
         reportingData.getSession().setMetadataId(reportingData.getMetadata().getMetadataId());
         reportingData.setSession(sessionDao.create(reportingData.getSession()));
         reportingData.setEvents(eventDao.create(reportingData.getMetadata().getHash(), reportingData.getEvents()));
+
+        database.setTransactionSuccessful();
+        database.endTransaction();
         return reportingData;
     }
 
@@ -81,6 +94,7 @@ public class DaoMaster {
         }
         return trackingUrlDao.getTableAsString() + "\n" +
                 metadataDao.getTableAsString() + "\n" +
+                metadataUrlRefDao.getTableAsString() + "\n" +
                 sessionDao.getTableAsString() + "\n" +
                 eventDao.getTableAsString() + "\n" +
                 reportingDao.getTableAsString();
@@ -93,6 +107,7 @@ public class DaoMaster {
      * @param reportingData - the data that is not supposed to be deleted because the framework is still using it.
      */
     public synchronized void cleanUpDb(ReportingData reportingData) {
+        database.beginTransaction();
         reportingDao.deleteExpiredEvents();
 
         List<Long> sessionIds = reportingDao.getSessions();
@@ -116,7 +131,10 @@ public class DaoMaster {
             metadataDao.deleteNotIn(metadataIds);
             List<String> hashes = new ArrayList<>();
             for (long id : metadataIds) {
-                hashes.add(metadataDao.getMetadata(id).getHash());
+                Metadata meta = metadataDao.getMetadata(id);
+                if (meta != null) {
+                    hashes.add(meta.getHash());
+                }
             }
             eventDao.deleteNotIn(hashes.toArray(new String[]{}));
         } else {
@@ -124,7 +142,15 @@ public class DaoMaster {
             eventDao.deleteAll();
         }
 
-        List<Long> trackingUrls = reportingDao.getTrackingUrls();
+        List<Long> remainingMetaDataIds = metadataDao.getAll();
+        if (remainingMetaDataIds.isEmpty()) {
+            metadataUrlRefDao.deleteAll();
+        } else {
+            metadataUrlRefDao.deleteNotIn(remainingMetaDataIds);
+        }
+
+
+        List<Long> trackingUrls = metadataUrlRefDao.read();
         if (reportingData != null && reportingData.getTrackingUrls() != null) {
             for (TrackingUrl url : reportingData.getTrackingUrls()) {
                 if (!trackingUrls.contains(url.getTrackingUrlId())) {
@@ -138,9 +164,12 @@ public class DaoMaster {
         } else {
             trackingUrlDao.deleteAll();
         }
+        database.setTransactionSuccessful();
+        database.endTransaction();
     }
 
     public synchronized List<ReportingData> getReportingData() {
+        database.beginTransaction();
         ArrayList<ReportingData> results = new ArrayList<>();
         List<TrackingUrl> trackingUrls = trackingUrlDao.read();
         for (TrackingUrl url : trackingUrls) {
@@ -165,12 +194,17 @@ public class DaoMaster {
                 results.add(data);
             }
         }
+        database.setTransactionSuccessful();
+        database.endTransaction();
         return results;
     }
 
     public synchronized void deleteReportingData(ReportingData rad) {
+        database.beginTransaction();
         for (Event event : rad.getEvents()) {
-            reportingDao.delete(rad.getTrackingUrls().get(0).getTrackingUrlId(), rad.getSession().getSessionId(), event.getEventId());
+            reportingDao.delete(rad.getTrackingUrls().get(0).getTrackingUrlId(), rad.getSession().getSessionId(), event.getEventId(), event.getTimestamp());
         }
+        database.setTransactionSuccessful();
+        database.endTransaction();
     }
 }

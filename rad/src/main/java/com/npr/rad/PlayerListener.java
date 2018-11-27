@@ -83,18 +83,23 @@ public class PlayerListener implements Player.EventListener {
                     Metadata metadata = trackSelection.getFormat(selectionIndex).metadata;
                     if (metadata != null) {
                         for (int i = 0; i < metadata.length(); i++) {
+                            if (metadata.get(i) instanceof InternalFrame) {
+                                InternalFrame frame = (InternalFrame) metadata.get(i);
+                                if (frame.text.contains(REMOTE_AUDIO_DATA)) {
+                                    return frame.text;
+                                }
+                            }
                             if (metadata.get(i) instanceof CommentFrame) {
-                                CommentFrame cf = (CommentFrame) metadata.get(i);
-                                if (cf.text.contains(REMOTE_AUDIO_DATA)) {
-                                    return cf.text;
+                                CommentFrame frame = (CommentFrame) metadata.get(i);
+                                if (frame.text.contains(REMOTE_AUDIO_DATA)) {
+                                    return frame.text;
                                 }
                             }
                             if (metadata.get(i) instanceof TextInformationFrame) {
-                                TextInformationFrame cf = (TextInformationFrame) metadata.get(i);
-                                if (cf.value.contains(REMOTE_AUDIO_DATA)) {
-                                    return cf.value;
+                                TextInformationFrame frame = (TextInformationFrame) metadata.get(i);
+                                if (frame.value.contains(REMOTE_AUDIO_DATA)) {
+                                    return frame.value;
                                 }
-
                             }
                         }
                     }

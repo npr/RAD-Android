@@ -46,9 +46,13 @@ public class PlaybackEventScheduler {
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                position = rad.getPlayer().getContentPosition();
-                processEvents(rad.getReportingData().getEvents(startTime, position));
-                scheduleEvent(position);
+                if (rad.getPlayer() != null) {
+                    position = rad.getPlayer().getContentPosition();
+                    processEvents(rad.getReportingData().getEvents(startTime, position));
+                    scheduleEvent(position);
+                } else {
+                    cancel();
+                }
             }
         }, 50);
     }

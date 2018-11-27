@@ -125,14 +125,14 @@ public class SessionTable {
     void deleteNotIn(List<Long> sessionIds) {
         String whereClause = "";
         if (null != sessionIds && !sessionIds.isEmpty()) {
-            whereClause = SESSION_ID + " NOT IN " + arrayAsText(sessionIds) + " AND ";
+            whereClause = SESSION_ID + " NOT IN " + listAsText(sessionIds) + " AND ";
         }
         long expiration = System.currentTimeMillis() - Rad.getInstance().getSessionExpirationTimeInterval();
         whereClause += TIME_STAMP + "<" + expiration;
         db.delete(TABLE_NAME, whereClause, null);
     }
 
-    private static String arrayAsText(List<Long> args) {
+    private static String listAsText(List<Long> args) {
         StringBuilder strBuilder = new StringBuilder();
         strBuilder.append("(");
         for (int i = 0; i < args.size() - 1; i++) {

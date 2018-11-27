@@ -143,9 +143,9 @@ public class ReportingTable {
         return results;
     }
 
-    public void delete(long trackingUrlId, long sessionId, long eventId) {
-        String[] whereArgs = new String[]{String.valueOf(trackingUrlId), String.valueOf(sessionId), String.valueOf(eventId)};
+    public void delete(long trackingUrlId, long sessionId, long eventId, long eventTimestamp) {
+        String[] whereArgs = new String[]{String.valueOf(trackingUrlId), String.valueOf(sessionId), String.valueOf(eventId), String.valueOf(eventTimestamp)};
         db.delete(TABLE_NAME, TRACKING_URL_ID + " =? AND " + SESSION_ID + " =? AND "
-                + EVENT_ID + " =?", whereArgs);
+                + EVENT_ID + " =? AND " + TIMESTAMP + " =? ", whereArgs);
     }
 }

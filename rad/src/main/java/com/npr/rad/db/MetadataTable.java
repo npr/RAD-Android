@@ -21,6 +21,9 @@ import android.database.sqlite.SQLiteDatabase;
 
 import com.npr.rad.model.Metadata;
 
+import java.util.ArrayList;
+import java.util.List;
+
 
 public class MetadataTable {
 
@@ -39,7 +42,7 @@ public class MetadataTable {
     static void createTable(SQLiteDatabase db) {
         db.execSQL(
                 "create table " + TABLE_NAME + " ("
-                        + FIELDS + " text unique not null,"
+                        + FIELDS + " text not null,"
                         + HASH + " text unique not null,"
                         + METADATA_ID + " integer primary key autoincrement"
                         + ")"
@@ -102,5 +105,21 @@ public class MetadataTable {
 
     void deleteNotIn(String metadataIds) {
         db.delete(TABLE_NAME, METADATA_ID + " NOT IN " + metadataIds, null);
+    }
+
+    public List<Long> read() {
+        ArrayList<Long> results = new ArrayList<>();
+        Cursor cursor = db.rawQuery("SELECT " + METADATA_ID + " FROM " + TABLE_NAME, null);
+        if (cursor != null) {
+            if (cursor.moveToFirst()) {
+                do {
+                    long id = cursor.getLong(cursor.getColumnIndex(METADATA_ID));
+                    if (!results.contains(id))
+                        results.add(id);
+                } while (cursor.moveToNext());
+            }
+            cursor.close();
+        }
+        return results;
     }
 }

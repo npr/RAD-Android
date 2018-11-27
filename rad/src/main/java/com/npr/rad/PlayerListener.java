@@ -56,8 +56,8 @@ public class PlayerListener implements Player.EventListener {
 
     @Override
     public void onTracksChanged(TrackGroupArray trackGroups, TrackSelectionArray trackSelections) {
+        Rad.getInstance().setReportingData(null);
         persistMetadata(extractRadPayload(trackSelections));
-        extractRadPayload(trackSelections);
     }
 
     private void persistMetadata(String s) {

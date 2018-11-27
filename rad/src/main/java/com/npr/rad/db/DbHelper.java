@@ -37,6 +37,7 @@ public class DbHelper extends SQLiteOpenHelper {
         SessionTable.createTable(db);
         EventTable.createTable(db);
         ReportingTable.createTable(db);
+        MetadataUrlRefTable.createTable(db);
     }
 
     public void onUpgrade(SQLiteDatabase database, int oldVersion, int newVersion) {

@@ -42,6 +42,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import androidx.annotation.NonNull;
@@ -76,7 +77,6 @@ public class HTTPService extends JobIntentService {
     final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
     final SimpleDateFormat timeZoneFormat = new SimpleDateFormat("HH:mm");
 
-    ExecutorService executorService = Executors.newFixedThreadPool(DEFAULT_THREAD_POOL_SIZE);
 
     private interface NetworkApi {
         @POST("/{path}")
@@ -88,24 +88,32 @@ public class HTTPService extends JobIntentService {
         if (null == Rad.getInstance() || null == Rad.getInstance().getApplicationContext()) {
             return;
         }
-
-        DaoMaster.getInstance().cleanUpDb(Rad.getInstance().getReportingData());
         if (!isInternetConnectionAvailable()) {
             return;
         }
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(Rad.getInstance().getApplicationContext());
-
+        if (prefs.getBoolean("BUSY", false)) {
+            Log.d(TAG, "onHandleWork(): reporting canceled: previous job still running !");
+            return;
+        }
         long lastUpdated = prefs.getLong(LAST_UPDATED, 0);
         if (System.currentTimeMillis() - lastUpdated < Rad.getInstance().getSubmissionTimeInterval()) {
+            Log.d(TAG, "onHandleWork(): reporting canceled: too soon");
             return;
         }
         prefs.edit().putLong(LAST_UPDATED, System.currentTimeMillis()).apply();
-
+        prefs.edit().putBoolean("BUSY", true).apply();
+        DaoMaster.getInstance().cleanUpDb(Rad.getInstance().getReportingData());
         List<ReportingData> data = DaoMaster.getInstance().getReportingData();
         if (data == null || data.isEmpty()) {
+            Log.d(TAG, "onHandleWork(): reporting canceled: no reporting data");
+            prefs.edit().putBoolean("BUSY", false).apply();
             return;
         }
-        sendRequests(batchRequests(createRequestObjects(data)));
+        List<RequestObject> requests = createRequestObjects(data);
+        List<RequestObject> batchedRequests = batchRequests(requests);
+        ExecutorService executorService = Executors.newFixedThreadPool(DEFAULT_THREAD_POOL_SIZE);
+        sendRequests(executorService, batchedRequests);
     }
 
     /*
@@ -186,7 +194,7 @@ public class HTTPService extends JobIntentService {
     /*
      *  Method sends out requests and handles response codes
      */
-    private void sendRequests(List<RequestObject> enqueuedRequests) {
+    private void sendRequests(ExecutorService executorService, List<RequestObject> enqueuedRequests) {
         final OkHttpClient okHttpClient = new OkHttpClient.Builder()
                 .readTimeout(60, TimeUnit.SECONDS)
                 .connectTimeout(60, TimeUnit.SECONDS)
@@ -198,146 +206,163 @@ public class HTTPService extends JobIntentService {
                     }
                 })
                 .build();
+        final int[] totalEventsReported = {0};
         for (final RequestObject requestObject : enqueuedRequests) {
-            executorService.execute(new Runnable() {
-                @Override
-                public void run() {
-                    JSONObject requestBodyJson = new JSONObject();
-                    JSONObject[] audioSessions = new JSONObject[requestObject.radObjects.size()];
-                    for (Iterator<ReportingData> iterator = requestObject.radObjects.iterator(); iterator.hasNext(); ) {
-                        ReportingData rad = iterator.next();
-                        if (rad.getEvents().isEmpty()) {
-                            iterator.remove();
-                        }
-                    }
-                    if (requestObject.radObjects.isEmpty()) {
-                        return;
-                    }
-                    for (int i = 0; i < requestObject.radObjects.size(); i++) {
-                        ReportingData rad = requestObject.radObjects.get(i);
-                        if (rad == null) {
-                            continue;
-                        }
-                        JSONObject radJson = null;
-                        try {
-                            radJson = new JSONObject(rad.getMetadata().getFields());
-                            radJson.accumulate("sessionId", rad.getSession().getSessionUuid());
-                        } catch (JSONException | NullPointerException e) {
-                            Log.e(TAG, "Error creating request json body", e);
-                        }
-                        JSONObject[] eventsJson = new JSONObject[rad.getEvents().size()];
-                        for (int j = 0; j < rad.getEvents().size(); j++) {
-                            try {
-                                eventsJson[j] = new JSONObject(rad.getEvents().get(j).getFields());
-                            } catch (JSONException e) {
-                                e.printStackTrace();
+            try {
+                executorService.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        JSONObject requestBodyJson = new JSONObject();
+                        JSONObject[] audioSessions = new JSONObject[requestObject.radObjects.size()];
+                        for (Iterator<ReportingData> iterator = requestObject.radObjects.iterator(); iterator.hasNext(); ) {
+                            ReportingData rad = iterator.next();
+                            if (rad.getEvents().isEmpty()) {
+                                iterator.remove();
                             }
+                        }
+                        if (requestObject.radObjects.isEmpty()) {
+                            return;
+                        }
+                        for (int i = 0; i < requestObject.radObjects.size(); i++) {
+                            ReportingData rad = requestObject.radObjects.get(i);
+                            if (rad == null) {
+                                continue;
+                            }
+                            JSONObject radJson = null;
                             try {
-                                Date d = new Date(rad.getEvents().get(j).getTimestamp());
-                                Date tz = new Date(rad.getEvents().get(j).getTimezoneOffset());
-                                StringBuilder date = new StringBuilder();
-                                date.append(dateFormat.format(d));
-                                String timeZone = timeZoneFormat.format(tz);
-                                if (tz.getTime() >= 0) {
-                                    date.append("+");
-                                } else {
-                                    date.append("-");
+                                radJson = new JSONObject(rad.getMetadata().getFields());
+                                radJson.accumulate("sessionId", rad.getSession().getSessionUuid());
+                            } catch (JSONException | NullPointerException e) {
+                                Log.e(TAG, "Error creating request json body", e);
+                            }
+                            JSONObject[] eventsJson = new JSONObject[rad.getEvents().size()];
+                            for (int j = 0; j < rad.getEvents().size(); j++) {
+                                try {
+                                    eventsJson[j] = new JSONObject(rad.getEvents().get(j).getFields());
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
                                 }
-                                date.append(timeZone);
-                                eventsJson[j].accumulate(TIMESTAMP, date.toString());
-                            } catch (JSONException e) {
-                                e.printStackTrace();
+                                try {
+                                    Date d = new Date(rad.getEvents().get(j).getTimestamp());
+                                    Date tz = new Date(rad.getEvents().get(j).getTimezoneOffset());
+                                    StringBuilder date = new StringBuilder();
+                                    date.append(dateFormat.format(d));
+                                    String timeZone = timeZoneFormat.format(tz);
+                                    if (tz.getTime() >= 0) {
+                                        date.append("+");
+                                    } else {
+                                        date.append("-");
+                                    }
+                                    date.append(timeZone);
+                                    eventsJson[j].accumulate(TIMESTAMP, date.toString());
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                            try {
+                                radJson.put(EVENTS, new JSONArray(eventsJson));
+                                audioSessions[i] = radJson;
+                            } catch (JSONException | NullPointerException e) {
+                                Log.e(TAG, "Error creating request json", e);
                             }
                         }
                         try {
-                            radJson.put(EVENTS, new JSONArray(eventsJson));
-                            audioSessions[i] = radJson;
-                        } catch (JSONException | NullPointerException e) {
-                            Log.e(TAG, "Error creating request json", e);
+                            requestBodyJson.accumulate(AUDIO_SESSIONS, new JSONArray(audioSessions));
+                        } catch (JSONException e) {
+                            e.printStackTrace();
                         }
-                    }
-                    try {
-                        requestBodyJson.accumulate(AUDIO_SESSIONS, new JSONArray(audioSessions));
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
 
-                    Retrofit retrofit;
-                    try {
-                        retrofit = new Retrofit.Builder()
-                                .baseUrl(requestObject.radObjects.get(0).getTrackingUrls().get(0).getTrackingUrlString())
-                                .client(okHttpClient)
-                                .build();
-                    } catch (IllegalArgumentException e) {
-                        Log.w(TAG, "sendRequests: " + requestBodyJson.toString(), e);
-                        return;
-                    }
-                    NetworkApi api = retrofit.create(NetworkApi.class);
-                    RequestBody requestBody = RequestBody.create(MediaType.parse("application/json"), requestBodyJson.toString());
-                    String path = getPath(requestObject.radObjects.get(0).getTrackingUrls().get(0).getTrackingUrlString());
-                    Request request = api.sendEvents(path, requestBody).request();
-                    StringBuilder debugStringBuilder = new StringBuilder("\n\n\nREQUEST: ").append(request.toString());
-                    debugStringBuilder.append("\nHEADERS: ").append(request.headers().toString());
-                    debugStringBuilder.append("BODY: ").append(requestBodyJson.toString());
-                    Response response;
-                    try {
-                        response = api.sendEvents(path, requestBody).execute();
-                    } catch (IOException e) {
-                        Log.e(TAG, "Error sending request", e);
-                        return;
-                    }
-                    debugStringBuilder.append("\nRESPONSE: ").append(response.toString());
-                    Rad.getInstance().onRequestSent(debugStringBuilder.toString());
-
-                    // 3xx Redirect - follow new URL
-                    while (response.code() >= 300 && response.code() < 400) {
+                        Retrofit retrofit;
                         try {
-                            String newUrl = response.raw().header("location");
-                            path = getPath(newUrl);
-                            if (TextUtils.isEmpty(newUrl)) {
-                                Log.e(TAG, "Redirect url is empty!");
+                            retrofit = new Retrofit.Builder()
+                                    .baseUrl(requestObject.radObjects.get(0).getTrackingUrls().get(0).getTrackingUrlString())
+                                    .client(okHttpClient)
+                                    .build();
+                        } catch (IllegalArgumentException e) {
+                            Log.w(TAG, "sendRequests: " + requestBodyJson.toString(), e);
+                            return;
+                        }
+                        NetworkApi api = retrofit.create(NetworkApi.class);
+                        RequestBody requestBody = RequestBody.create(MediaType.parse("application/json"), requestBodyJson.toString());
+                        String path = getPath(requestObject.radObjects.get(0).getTrackingUrls().get(0).getTrackingUrlString());
+                        Request request = api.sendEvents(path, requestBody).request();
+                        StringBuilder debugStringBuilder = new StringBuilder("\n\n\nREQUEST: ").append(request.toString());
+                        debugStringBuilder.append("\nHEADERS: ").append(request.headers().toString());
+                        debugStringBuilder.append("BODY: ").append(requestBodyJson.toString());
+                        Response response;
+                        try {
+                            response = api.sendEvents(path, requestBody).execute();
+                        } catch (IOException e) {
+                            Log.e(TAG, "Error sending request", e);
+                            return;
+                        }
+                        debugStringBuilder.append("\nRESPONSE: ").append(response.toString());
+                        Rad.getInstance().onRequestSent(debugStringBuilder.toString());
+
+                        Log.d(TAG, "sendRequests() called with: enqueuedRequests = [" + requestObject.trackingUrl + "] count:" + requestObject.size());
+                        totalEventsReported[0] += requestObject.size();
+
+                        // 3xx Redirect - follow new URL
+                        while (response.code() >= 300 && response.code() < 400) {
+                            try {
+                                String newUrl = response.raw().header("location");
+                                path = getPath(newUrl);
+                                if (TextUtils.isEmpty(newUrl)) {
+                                    Log.e(TAG, "Redirect url is empty!");
+                                    break;
+                                }
+                                newUrl = buildRedirectUrl(newUrl, requestObject.radObjects.get(0).getTrackingUrls().get(0).getTrackingUrlString());
+                                if (TextUtils.isEmpty(newUrl) || !Patterns.WEB_URL.matcher(newUrl).matches()) {
+                                    for (ReportingData rad : requestObject.radObjects) {
+                                        DaoMaster.getInstance().deleteReportingData(rad);
+                                    }
+                                } else {
+                                    retrofit = new Retrofit.Builder()
+                                            .baseUrl(newUrl)
+                                            .client(okHttpClient)
+                                            .build();
+                                    api = retrofit.create(NetworkApi.class);
+                                    requestBody = RequestBody.create(MediaType.parse("application/json"), requestBodyJson.toString());
+                                    request = api.sendEvents(path, requestBody).request();
+                                    debugStringBuilder.append("\nREDIRECTED: ").append(request.toString());
+                                    response = api.sendEvents(path, requestBody).execute();
+                                    debugStringBuilder.append("\nRESPONSE: ").append(response.toString());
+                                }
+                            } catch (IOException | IllegalArgumentException e) {
+                                Log.e(TAG, "sendRequests: ", e);
                                 break;
                             }
-                            newUrl = buildRedirectUrl(newUrl, requestObject.radObjects.get(0).getTrackingUrls().get(0).getTrackingUrlString());
-                            if (TextUtils.isEmpty(newUrl) || !Patterns.WEB_URL.matcher(newUrl).matches()) {
-                                for (ReportingData rad : requestObject.radObjects) {
-                                    DaoMaster.getInstance().deleteReportingData(rad);
-                                }
-                            } else {
-                                retrofit = new Retrofit.Builder()
-                                        .baseUrl(newUrl)
-                                        .client(okHttpClient)
-                                        .build();
-                                api = retrofit.create(NetworkApi.class);
-                                requestBody = RequestBody.create(MediaType.parse("application/json"), requestBodyJson.toString());
-                                request = api.sendEvents(path, requestBody).request();
-                                debugStringBuilder.append("\nREDIRECTED: ").append(request.toString());
-                                response = api.sendEvents(path, requestBody).execute();
-                                debugStringBuilder.append("\nRESPONSE: ").append(response.toString());
+                        }
+
+                        //* 2xx Success - delete events*//*
+                        if (response.code() >= 200 && response.code() < 300) {
+                            for (ReportingData rad : requestObject.radObjects) {
+                                DaoMaster.getInstance().deleteReportingData(rad);
                             }
-                        } catch (IOException | IllegalArgumentException e) {
-                            Log.e(TAG, "sendRequests: ", e);
-                            break;
                         }
 
-                    }
-
-                    //* 2xx Success - delete events*//*
-                    if (response.code() >= 200 && response.code() < 300) {
-                        for (ReportingData rad : requestObject.radObjects) {
-                            DaoMaster.getInstance().deleteReportingData(rad);
+                        //* 4xx Request Error - delete events*//*
+                        if (response.code() >= 400 && response.code() < 500) {
+                            for (ReportingData rad : requestObject.radObjects) {
+                                DaoMaster.getInstance().deleteReportingData(rad);
+                            }
                         }
+                        //* 5xx Server error - retry later, keep events*//*
                     }
-
-                    //* 4xx Request Error - delete events*//*
-                    if (response.code() >= 400 && response.code() < 500) {
-                        for (ReportingData rad : requestObject.radObjects) {
-                            DaoMaster.getInstance().deleteReportingData(rad);
-                        }
-                    }
-                    //* 5xx Server error - retry later, keep events*//*
-                }
-            });
+                });
+            } catch (RejectedExecutionException ree) {
+                Log.e(TAG, "sendRequests: ", ree);
+            }
+        }
+        executorService.shutdown();
+        try {
+            executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+            Log.d(TAG, "sendRequests: count total:" + totalEventsReported[0]);
+        } catch (InterruptedException e) {
+            Log.e(TAG, "sendRequests: ", e);
+        } finally {
+            Log.d(TAG, "sendRequests: reporting finished.");
+            PreferenceManager.getDefaultSharedPreferences(Rad.getInstance().getApplicationContext()).edit().putBoolean("BUSY", false).apply();
         }
     }
 

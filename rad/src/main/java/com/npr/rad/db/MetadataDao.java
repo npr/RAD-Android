@@ -61,4 +61,8 @@ class MetadataDao extends BaseDao {
     Metadata getMetadata(long metadataId) {
         return metadataTable.getMetadata(metadataId);
     }
+
+    List<Long> getAll(){
+        return metadataTable.read();
+    }
 }

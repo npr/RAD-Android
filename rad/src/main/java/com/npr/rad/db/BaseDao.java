@@ -18,6 +18,7 @@ package com.npr.rad.db;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 
 abstract class BaseDao {
 

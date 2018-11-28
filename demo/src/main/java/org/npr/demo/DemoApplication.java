@@ -10,5 +10,6 @@ public class DemoApplication extends Application {
     public void onCreate() {
         super.onCreate();
         Rad.with(this);
+        Rad.setDebugEnabled(true);
     }
 }

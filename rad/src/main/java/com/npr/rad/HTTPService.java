@@ -213,7 +213,6 @@ public class HTTPService extends JobIntentService {
                     @Override
                     public void run() {
                         JSONObject requestBodyJson = new JSONObject();
-                        JSONObject[] audioSessions = new JSONObject[requestObject.radObjects.size()];
                         for (Iterator<ReportingData> iterator = requestObject.radObjects.iterator(); iterator.hasNext(); ) {
                             ReportingData rad = iterator.next();
                             if (rad.getEvents().isEmpty()) {
@@ -223,6 +222,7 @@ public class HTTPService extends JobIntentService {
                         if (requestObject.radObjects.isEmpty()) {
                             return;
                         }
+                        JSONObject[] audioSessions = new JSONObject[requestObject.radObjects.size()];
                         for (int i = 0; i < requestObject.radObjects.size(); i++) {
                             ReportingData rad = requestObject.radObjects.get(i);
                             if (rad == null) {

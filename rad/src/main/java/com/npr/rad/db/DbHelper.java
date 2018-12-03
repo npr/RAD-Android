@@ -22,14 +22,18 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class DbHelper extends SQLiteOpenHelper {
 
-    private static final String DATABASE_NAME = "RAD_DB";
+    private SQLiteDatabase database;
+
+    private static final String DATABASE_NAME = "RAD_DB.db";
 
     private static final int DATABASE_VERSION = 1;
 
 
     DbHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
+        database = getWritableDatabase();
     }
+
 
     public void onCreate(SQLiteDatabase db) {
         TrackingUrlTable.createTable(db);
@@ -42,5 +46,9 @@ public class DbHelper extends SQLiteOpenHelper {
 
     public void onUpgrade(SQLiteDatabase database, int oldVersion, int newVersion) {
         /*  Method must be implemented by adopters who wish to support versioning and schema migrations. */
+    }
+
+    public SQLiteDatabase getDatabase() {
+        return database;
     }
 }

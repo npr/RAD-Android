@@ -30,7 +30,7 @@ _e.g.:_ call `Rad.with(this)` in the `onCreate()` method of the Android applicat
 
 `Rad.getInstance().get/setSessionExpirationTimeInterval(long millis)` - configures the maximum age of a listening session
 
-Alternatively, for initializing and configuring the framework call `Rad.with(Application application, Rad.Configuration config)` passing a `Rad.Configuration` object containing all of the above configuration
+Alternatively, for initializing and configuring the framework call `Rad.with(Application application, Rad.Configuration config)` passing a `Rad.Configuration` object containing all of the above configuration. Please bear in mind that properties that were omitted in the configuration will be set to default, overriding previous values! The configuration was designed to be used when initializing the framework and the getter/setter pairs for each property were designed to change the behaviour of the framework after the initialization/configuration.
 
 #### Monitoring Playback
 

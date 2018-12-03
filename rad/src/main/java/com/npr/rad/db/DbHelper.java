@@ -22,7 +22,6 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class DbHelper extends SQLiteOpenHelper {
 
-    private SQLiteDatabase database;
 
     private static final String DATABASE_NAME = "RAD_DB.db";
 
@@ -31,7 +30,6 @@ public class DbHelper extends SQLiteOpenHelper {
 
     DbHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
-        database = getWritableDatabase();
     }
 
 
@@ -46,9 +44,5 @@ public class DbHelper extends SQLiteOpenHelper {
 
     public void onUpgrade(SQLiteDatabase database, int oldVersion, int newVersion) {
         /*  Method must be implemented by adopters who wish to support versioning and schema migrations. */
-    }
-
-    public SQLiteDatabase getDatabase() {
-        return database;
     }
 }

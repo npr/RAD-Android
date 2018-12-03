@@ -51,7 +51,7 @@ public class DaoMaster {
 
     public synchronized void setContext(Context context) {
         DbHelper dbHelper = new DbHelper(context);
-        database = dbHelper.getDatabase();
+        database = dbHelper.getWritableDatabase();
         trackingUrlDao = new TrackingUrlDao(database);
         metadataDao = new MetadataDao(database);
         sessionDao = new SessionDao(database);

@@ -17,7 +17,6 @@ package com.npr.rad.db;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
-import android.util.Log;
 
 import com.npr.rad.model.Event;
 import com.npr.rad.model.Metadata;
@@ -52,7 +51,7 @@ public class DaoMaster {
 
     public synchronized void setContext(Context context) {
         DbHelper dbHelper = new DbHelper(context);
-        database = dbHelper.getWritableDatabase();
+        database = dbHelper.getDatabase();
         trackingUrlDao = new TrackingUrlDao(database);
         metadataDao = new MetadataDao(database);
         sessionDao = new SessionDao(database);

@@ -12,7 +12,7 @@ If you want to view the RAD specification in more detail, please visit [this pag
 
 #### Project Setup
 
-Add _implementation org.npr:rad:1.0.10_ to your module's gradle's dependencies.
+Add _implementation org.npr:rad:1.0.11_ to your module's gradle's dependencies.
 
 #### Initialize the Framework
 

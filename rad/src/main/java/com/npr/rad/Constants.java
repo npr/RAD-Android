@@ -34,5 +34,5 @@ public class Constants {
     public static final long DEFAULT_SESSION_EXPIRATION_TIME_INTERVAL = 24 * 60 * 60 * 1000L; /* 24 hours */
     public static final long DEFAULT_EXPIRATION_TIME_INTERVAL = 24 * 60 * 60 * 1000L; /* 24 hours */
     public static final long DEFAULT_SUBMISSION_TIME_INTERVAL = 20 * 60 * 1000L; /* 20 minutes */
-    public static final String DEFAULT_USER_AGENT = "RAD/NPR/Android";
+    public static final String DEFAULT_USER_AGENT = "RAD/Android";
 }

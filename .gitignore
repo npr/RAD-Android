@@ -1,0 +1,10 @@
+/build
+demo/build
+rad/build
+demo/local.properties
+rad/local.properties
+.gradle/
+.idea/
+rad/rad.iml
+demo/demo.iml
+RAD-Android.iml

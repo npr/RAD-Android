@@ -17,7 +17,6 @@ package com.npr.rad.db;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
-import android.util.Log;
 
 import com.npr.rad.model.Event;
 import com.npr.rad.model.Metadata;

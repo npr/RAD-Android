@@ -12,7 +12,7 @@ If you want to view the RAD specification in more detail, please visit [this pag
 
 #### Project Setup
 
-Add _implementation org.npr:rad:1.0.5_ to your module's gradle's dependencies.
+Add _implementation org.npr:rad:1.0.11_ to your module's gradle's dependencies.
 
 #### Initialize the Framework
 
@@ -28,9 +28,11 @@ _e.g.:_ call `Rad.with(this)` in the `onCreate()` method of the Android applicat
 
 `Rad.getInstance().get/setExpirationTimeInterval(long millis)` - configures the maximum age of events to be reported
 
+`Rad.getInstance().get/setSubmissionTimeInterval(long millis)` - configures the interval of time the framework will monitor for events before submitting them
+
 `Rad.getInstance().get/setSessionExpirationTimeInterval(long millis)` - configures the maximum age of a listening session
 
-Alternatively, for initializing and configuring the framework call `Rad.with(Application application, Rad.Configuration config)` passing a `Rad.Configuration` object containing all of the above configuration
+Alternatively, for initializing and configuring the framework call `Rad.with(Application application, Rad.Configuration config)` passing a `Rad.Configuration` object containing all of the above configuration. Please bear in mind that properties that were omitted in the configuration will be set to default, overriding previous values! The configuration was designed to be used when initializing the framework and the getter/setter pairs for each property were designed to change the behaviour of the framework after the initialization/configuration.
 
 #### Monitoring Playback
 
@@ -54,3 +56,21 @@ _e.g.:_
                  `public void onEventTriggered(String s) {}`
                  `public void onRequestSent(String s) {}`
              `});`
+             
+#### Using RAD with custom versions of exoplayer
+
+  The framework is build for exoplayer 2.9.1. To use the framwork with custom forks of exoplayer remove the exoplayer dependency from the build file, use Android Studio to add a new module with the custom version of exoplayer that you may have, and add the module as a dependency to the _app_ module. You may then build the framework with a custom version of exoplayer. If the version of exoplayer that was forked is lower than 2.9, in the body of the method:
+  
+  `private static Id3Frame parseInternalAttribute(ParsableByteArray data, int endPosition)`
+  
+  from `MetadatUtil.java` (line ~ 296), find the block of code:
+  
+  `if (!"com.apple.iTunes".equals(domain) || !"iTunSMPB".equals(name) || dataAtomPosition == -1) {
+      // We're only interested in iTunSMPB.
+      return null;
+    }` and comment it out or remove it! 
+    
+  This early return statement prevents exoplayer versions 2.8.x from parsing and returning custom tags from mp4 files.
+
+    
+  

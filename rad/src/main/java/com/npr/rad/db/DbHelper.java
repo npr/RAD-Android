@@ -22,7 +22,8 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class DbHelper extends SQLiteOpenHelper {
 
-    private static final String DATABASE_NAME = "RAD_DB";
+
+    private static final String DATABASE_NAME = "RAD_DB.db";
 
     private static final int DATABASE_VERSION = 1;
 
@@ -30,6 +31,7 @@ public class DbHelper extends SQLiteOpenHelper {
     DbHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
+
 
     public void onCreate(SQLiteDatabase db) {
         TrackingUrlTable.createTable(db);

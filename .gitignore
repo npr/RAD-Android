@@ -1,6 +1,7 @@
 /build
 demo/build
 rad/build
+local.properties
 demo/local.properties
 rad/local.properties
 .gradle/
